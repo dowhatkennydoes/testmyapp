@@ -12,42 +12,229 @@
     <link rel="stylesheet" href="styles.css">
     <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
   </head>
   <body>
-    <header class="bg-primary text-white p-3 mb-4 sticky-top">
-      <div class="container d-flex justify-content-between align-items-center">
-        <h1 class="h3 mb-0"><i class="fas fa-store me-2"></i>Ecommerce Demo</h1>
-        <button class="btn btn-light dark-mode-toggle" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button>
-      </div>
-    </header>
-
-    <section class="hero text-center py-5 bg-light mb-4">
-      <div class="container">
-        <h2 class="display-6 fw-normal">Welcome to our demo store</h2>
-        <p>Browse products, add your own, and chat with our assistant.</p>
-      </div>
-    </section>
-
-    <div id="root" class="container"></div>
-    <footer class="text-white">
-      &copy; 2025 My Shop
-    </footer>
+    <div id="root"></div>
     <script type="text/babel">
+      const { BrowserRouter, Routes, Route, Link, useParams, useNavigate } = ReactRouterDOM;
       const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-      const App = () => {
+
+      function HeroBanner() {
+        return (
+          <section className="hero text-center py-5 bg-light mb-4">
+            <div className="container">
+              <h2 className="display-6 fw-normal">Welcome to our demo store</h2>
+              <p>Browse products, add your own, and chat with our assistant.</p>
+            </div>
+          </section>
+        );
+      }
+
+      function FeaturedProducts({ products }) {
+        return (
+          <div className="row row-cols-1 row-cols-md-3 g-3 mb-4">
+            {products.map(p => (
+              <div key={p.id} className="col">
+                <div className="card h-100 shadow-sm product-card">
+                  <img className="card-img-top" src="https://via.placeholder.com/150" alt="" />
+                  <div className="card-body text-center">
+                    <h5 className="card-title">{p.name}</h5>
+                    <p className="card-text">{currency.format(p.price)}</p>
+                    <Link to={`/products/${p.id}`} className="btn btn-primary btn-sm">View</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      function PromoSection() {
+        return (
+          <div className="p-4 mb-4 bg-secondary text-white text-center rounded">
+            Limited time promotion! Get 10% off your first order.
+          </div>
+        );
+      }
+
+      const FooterComp = () => (
+        <footer className="text-white mt-5">&copy; 2025 My Shop</footer>
+      );
+
+      function ProductFilters({ filter, setFilter }) {
+        return (
+          <div className="mb-3">
+            <input className="form-control" placeholder="Search products" value={filter} onChange={e => setFilter(e.target.value)} />
+          </div>
+        );
+      }
+
+      function ProductGrid({ products }) {
+        return (
+          <div className="row row-cols-1 g-3">
+            {products.map(p => (
+              <div key={p.id} className="col">
+                <div className="card h-100 shadow-sm product-card">
+                  <img className="card-img-top" src="https://via.placeholder.com/150" alt="" />
+                  <div className="card-body text-center">
+                    <h5 className="card-title">{p.name}</h5>
+                    <p className="card-text">{currency.format(p.price)}</p>
+                    <Link to={`/products/${p.id}`} className="btn btn-primary btn-sm">Details</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      function Pagination({ page, total, perPage, setPage }) {
+        const max = Math.ceil(total / perPage);
+        return (
+          <nav className="mt-3" aria-label="Product pages">
+            <ul className="pagination justify-content-center">
+              <li className="page-item">
+                <button className="page-link" onClick={() => setPage(page - 1)} disabled={page <= 1}>Prev</button>
+              </li>
+              <li className="page-item disabled"><span className="page-link">Page {page}</span></li>
+              <li className="page-item">
+                <button className="page-link" onClick={() => setPage(page + 1)} disabled={page >= max}>Next</button>
+              </li>
+            </ul>
+          </nav>
+        );
+      }
+
+      function ProductImages() {
+        return <img className="img-fluid mb-3" src="https://via.placeholder.com/300" alt="" />;
+      }
+
+      function AddToCartButton({ onAdd }) {
+        return <button className="btn btn-success" onClick={onAdd}>Add to Cart</button>;
+      }
+
+      function ProductSpecs() {
+        return <p>Product specifications go here.</p>;
+      }
+
+      function RelatedProducts() {
+        return <p className="text-muted">Related products will appear here.</p>;
+      }
+
+      function CartItemsList({ cart }) {
+        return (
+          <ul className="list-group mb-3">
+            {cart.map((c, i) => (
+              <li key={i} className="list-group-item d-flex justify-content-between">
+                <span>{c.name}</span>
+                <span>{currency.format(c.price)}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      }
+
+      function DiscountCode() {
+        return (
+          <div className="mb-3">
+            <input className="form-control" placeholder="Discount code" />
+          </div>
+        );
+      }
+
+      function CheckoutCTA() {
+        const navigate = useNavigate();
+        return <button className="btn btn-primary" onClick={() => navigate('/checkout')}>Checkout</button>;
+      }
+
+      function ShippingInfo() {
+        return <input className="form-control mb-3" placeholder="Shipping address" />;
+      }
+
+      function PaymentForm() {
+        return <input className="form-control mb-3" placeholder="Payment details" />;
+      }
+
+      function OrderSummary({ cart }) {
+        const total = cart.reduce((s, c) => s + c.price, 0);
+        return <p>Total: {currency.format(total)}</p>;
+      }
+
+      const About = () => <div><h2>About</h2><p>About this shop.</p></div>;
+      const Contact = () => <div><h2>Contact</h2><p>Contact us at info@example.com.</p></div>;
+      const NotFound = () => <div><h2>Page Not Found</h2></div>;
+
+      function HomePage({ products }) {
+        return (
+          <div>
+            <HeroBanner />
+            <FeaturedProducts products={products.slice(0, 3)} />
+            <PromoSection />
+            <FooterComp />
+          </div>
+        );
+      }
+
+      function ProductsPage({ products, page, setPage, total, perPage, filter, setFilter }) {
+        const filtered = products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()));
+        return (
+          <div>
+            <h2>Products</h2>
+            <ProductFilters filter={filter} setFilter={setFilter} />
+            <ProductGrid products={filtered} />
+            <Pagination page={page} setPage={setPage} total={total} perPage={perPage} />
+          </div>
+        );
+      }
+
+      function ProductDetails({ products, addToCart }) {
+        const { id } = useParams();
+        const product = products.find(p => p.id === parseInt(id));
+        if (!product) return <NotFound />;
+        return (
+          <div>
+            <h2>{product.name}</h2>
+            <ProductImages />
+            <p>{currency.format(product.price)}</p>
+            <AddToCartButton onAdd={() => addToCart(product)} />
+            <ProductSpecs />
+            <RelatedProducts />
+          </div>
+        );
+      }
+
+      function CartPage({ cart }) {
+        return (
+          <div>
+            <h2>Your Cart</h2>
+            <CartItemsList cart={cart} />
+            <DiscountCode />
+            <CheckoutCTA />
+          </div>
+        );
+      }
+
+      function CheckoutPage({ cart }) {
+        return (
+          <div>
+            <h2>Checkout</h2>
+            <ShippingInfo />
+            <PaymentForm />
+            <OrderSummary cart={cart} />
+          </div>
+        );
+      }
+
+      function App() {
         const [products, setProducts] = React.useState([]);
         const [loadingProducts, setLoadingProducts] = React.useState(true);
         const [page, setPage] = React.useState(1);
         const perPage = 5;
         const [total, setTotal] = React.useState(0);
-        const [name, setName] = React.useState('');
-        const [price, setPrice] = React.useState('');
-        const [messages, setMessages] = React.useState([]);
-        const [userMessage, setUserMessage] = React.useState('');
-        const [loading, setLoading] = React.useState(false);
-        const [error, setError] = React.useState('');
-        const [success, setSuccess] = React.useState('');
+        const [filter, setFilter] = React.useState('');
+        const [cart, setCart] = React.useState([]);
 
         React.useEffect(() => {
           setLoadingProducts(true);
@@ -60,141 +247,45 @@
             .finally(() => setLoadingProducts(false));
         }, [page]);
 
-        React.useEffect(() => {
-          fetch('/chat/history')
-            .then(res => res.json())
-            .then(hist => setMessages(hist));
-        }, []);
-
-        const validProduct = () => name.trim() && !isNaN(parseFloat(price)) && parseFloat(price) >= 0;
-
-        const addProduct = () => {
-          if (!validProduct()) {
-            setError('Valid name and price required');
-            return;
-          }
-          setError('');
-          fetch('/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, price: parseFloat(price) })
-          })
-            .then(res => res.json())
-            .then(() => {
-              // refresh current page after adding
-              fetch(`/products?page=${page}&per_page=${perPage}`)
-                .then(res => res.json())
-                .then(data => {
-                  setProducts(data.items);
-                  setTotal(data.total);
-                });
-              setName('');
-              setPrice('');
-              setSuccess('Product added!');
-              setTimeout(() => setSuccess(''), 2000);
-            });
-        };
-
-        const sendMessage = () => {
-          if (!userMessage.trim()) return;
-          setLoading(true);
-          fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: userMessage })
-          })
-            .then(res => res.json())
-            .then(data => {
-              setMessages([...messages, { user: userMessage, bot: data.response }]);
-              setUserMessage('');
-            })
-            .finally(() => setLoading(false));
-        };
+        const addToCart = product => setCart([...cart, product]);
 
         return (
-          <div className="row g-4">
-            <div className="col-md-4">
-              <h2>Products</h2>
-              <div className="row row-cols-1 g-3">
-                {loadingProducts && (
-                  <div className="col">
-                    <div className="card h-100 shadow-sm p-3 placeholder-glow">
-                      <div className="placeholder card-img-top mb-2"></div>
-                      <span className="placeholder col-6"></span>
-                    </div>
-                  </div>
-                )}
-                {products.map(p => (
-                  <div key={p.id} className="col">
-                    <div className="card h-100 shadow-sm product-card">
-                      <img className="card-img-top" src="https://via.placeholder.com/150" alt="" />
-                      <div className="card-body">
-                        <h5 className="card-title text-center">{p.name}</h5>
-                        <p className="card-text text-center">{currency.format(p.price)}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+          <BrowserRouter>
+            <header className="bg-primary text-white p-3 mb-4 sticky-top">
+              <div className="container d-flex justify-content-between align-items-center">
+                <h1 className="h3 mb-0"><i className="fas fa-store me-2"></i>Ecommerce Demo</h1>
+                <nav>
+                  <Link to="/" className="text-white me-3">Home</Link>
+                  <Link to="/products" className="text-white me-3">Products</Link>
+                  <Link to="/cart" className="text-white me-3">Cart</Link>
+                  <Link to="/about" className="text-white me-3">About</Link>
+                  <Link to="/contact" className="text-white">Contact</Link>
+                </nav>
+                <button className="btn btn-light dark-mode-toggle" aria-label="Toggle dark mode"><i className="fas fa-moon"></i></button>
               </div>
-              <nav className="mt-3" aria-label="Product pages">
-                <ul className="pagination justify-content-center">
-                  <li className="page-item">
-                    <button className="page-link" onClick={() => setPage(page - 1)} disabled={page <= 1}>Prev</button>
-                  </li>
-                  <li className="page-item disabled"><span className="page-link">Page {page}</span></li>
-                  <li className="page-item">
-                    <button className="page-link" onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / perPage)}>Next</button>
-                  </li>
-                </ul>
-              </nav>
+            </header>
+            <div className="container">
+              {loadingProducts && <div className="text-center mb-3">Loading...</div>}
+              <Routes>
+                <Route path="/" element={<HomePage products={products} />} />
+                <Route path="/products" element={<ProductsPage products={products} page={page} setPage={setPage} total={total} perPage={perPage} filter={filter} setFilter={setFilter} />} />
+                <Route path="/products/:id" element={<ProductDetails products={products} addToCart={addToCart} />} />
+                <Route path="/cart" element={<CartPage cart={cart} />} />
+                <Route path="/checkout" element={<CheckoutPage cart={cart} />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </div>
-            <div className="col-md-4">
-              <h2>Add Product</h2>
-              <div className="mb-3">
-                <label className="form-label" htmlFor="name">Name</label>
-                <input id="name" className="form-control" placeholder="Product name" value={name} onChange={e => setName(e.target.value)} aria-required="true" />
-              </div>
-              <div className="mb-3">
-                <label className="form-label" htmlFor="price">Price</label>
-                <input id="price" className="form-control" placeholder="0.00" value={price} onChange={e => setPrice(e.target.value)} aria-required="true" />
-              </div>
-              {error && <div className="text-danger mb-2">{error}</div>}
-              {success && <div className="text-success mb-2">{success}</div>}
-              <button className="btn btn-primary" onClick={addProduct} disabled={!validProduct()} data-bs-toggle="tooltip" title="Add product">
-                <i className="fas fa-plus me-1"></i>Add
-              </button>
-            </div>
-            <div className="col-md-4">
-              <h2>Chatbot Assistant</h2>
-              <div className="mb-3" style={{ maxHeight: '300px', overflowY: 'auto' }} role="log" aria-live="polite">
-                {messages.map((m, i) => (
-                  <div key={i} className="chat-message d-flex gap-2">
-                    <i className="fas fa-user-circle text-primary"></i>
-                    <div>
-                      <div><strong>You:</strong> {m.user}</div>
-                      <div className="d-flex align-items-start gap-2"><i className="fas fa-robot text-success"></i><span>{m.bot}</span></div>
-                    </div>
-                  </div>
-                ))}
-                {loading && <div className="loading">Bot is typing...</div>}
-              </div>
-              <div className="input-group">
-                <input className="form-control" placeholder="Type a message" value={userMessage} onChange={e => setUserMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }} aria-label="Message" />
-                <button className="btn btn-secondary" onClick={sendMessage} disabled={!userMessage.trim()} aria-label="Send" data-bs-toggle="tooltip" title="Send message">
-                  <i className="fas fa-paper-plane"></i>
-                </button>
-              </div>
-            </div>
-          </div>
+          </BrowserRouter>
         );
-      };
+      }
 
       React.useEffect(() => {
-        document.querySelector('.dark-mode-toggle').addEventListener('click', () => {
-          document.body.classList.toggle('dark');
+        document.addEventListener('DOMContentLoaded', () => {
+          const toggle = document.querySelector('.dark-mode-toggle');
+          if (toggle) toggle.addEventListener('click', () => document.body.classList.toggle('dark'));
         });
-        const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(t => new bootstrap.Tooltip(t));
       }, []);
 
       ReactDOM.render(<App />, document.getElementById('root'));

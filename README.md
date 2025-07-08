@@ -19,6 +19,17 @@ Messages are sent to the `/chat` API endpoint and recent conversations can be re
 Keywords like "hello" or "price" trigger friendly replies, and missing messages return errors for predictability.
 The interface includes ARIA attributes for accessibility and tooltips on action buttons.
 
+## Storefront Pages
+The React frontend now uses React Router to provide a multi-page storefront:
+
+- **HomePage** – hero banner, featured products, promo section and footer
+- **Products** – filters, product grid and pagination
+- **ProductDetails** – images, specs, add-to-cart and related products
+- **Cart** – items list, discount code field and checkout button
+- **Checkout** – shipping form, payment form and order summary
+- **About** and **Contact** pages
+- Unmatched routes show a simple *404* page
+
 ## Drag-and-Drop CMS Ecommerce Stack (Python + React)
 
 ### Backend (Python)
