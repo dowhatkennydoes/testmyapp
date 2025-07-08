@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMS Ecommerce App</title>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const App = () => {
+        const [products, setProducts] = React.useState([]);
+        const [name, setName] = React.useState('');
+        const [price, setPrice] = React.useState('');
+
+        React.useEffect(() => {
+          fetch('/products')
+            .then(res => res.json())
+            .then(data => setProducts(data));
+        }, []);
+
+        const addProduct = () => {
+          fetch('/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, price: parseFloat(price) })
+          })
+            .then(res => res.json())
+            .then(product => setProducts([...products, product]));
+        };
+
+        return (
+          <div>
+            <h1>Products</h1>
+            <ul>
+              {products.map(p => (
+                <li key={p.id}>{p.name} - ${p.price}</li>
+              ))}
+            </ul>
+            <h2>Add Product</h2>
+            <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+            <input placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} />
+            <button onClick={addProduct}>Add</button>
+          </div>
+        );
+      };
+
+      ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+  </body>
+</html>
