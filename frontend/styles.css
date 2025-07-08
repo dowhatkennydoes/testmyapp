@@ -1,0 +1,97 @@
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --accent-color: #17a2b8;
+  --bg-color: #ffffff;
+  --text-color: #212529;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+body.dark {
+  --bg-color: #212529;
+  --text-color: #f8f9fa;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+
+.card-img-top {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.btn {
+  transition: background-color 0.2s ease;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+  border-color: var(--accent-color);
+}
+
+.chat-message {
+  margin-bottom: 0.75rem;
+  animation: fadeIn 0.3s ease;
+  align-items: flex-start;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dark-mode-toggle {
+  cursor: pointer;
+}
+
+.hero {
+  background-image: linear-gradient(to bottom right, var(--primary-color), var(--accent-color));
+  color: #fff;
+}
+
+.placeholder.card-img-top {
+  height: 150px;
+}
+
+.loading {
+  font-style: italic;
+  color: var(--secondary-color);
+}
+
+.chat-message i {
+  font-size: 1.5rem;
+}
+
+.chatbot {
+  max-width: 500px;
+}
+
+#chatHistory {
+  max-height: 200px;
+  overflow-y: auto;
+}

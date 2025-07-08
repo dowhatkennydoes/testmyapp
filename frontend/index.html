@@ -4,52 +4,481 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CMS Ecommerce App</title>
+    <title>The Sip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" href="https://via.placeholder.com/16" />
+    <link rel="stylesheet" href="styles.css">
     <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="text/babel">
-      const App = () => {
-        const [products, setProducts] = React.useState([]);
-        const [name, setName] = React.useState('');
-        const [price, setPrice] = React.useState('');
+      const { BrowserRouter, Routes, Route, Link, useParams, useNavigate } = ReactRouterDOM;
+
+      function useCurrencyFormatter(code) {
+        return React.useCallback(value => new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(value), [code]);
+      }
+
+      function HeroBanner() {
+        return (
+          <section className="hero text-center py-5 bg-light mb-4">
+            <div className="container">
+              <h2 className="display-6 fw-normal">Welcome to The Sip</h2>
+              <p>Browse products, add your own, and chat with our assistant.</p>
+            </div>
+          </section>
+        );
+      }
+
+      function Rating({ value }) {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+          stars.push(
+            <i key={i} className={`fa-star ${i <= Math.round(value) ? 'fas text-warning' : 'far text-muted'}`}></i>
+          );
+        }
+        return <div className="mb-1">{stars}</div>;
+      }
+
+      function FeaturedProducts({ products }) {
+        return (
+          <div className="row row-cols-1 row-cols-md-3 g-3 mb-4">
+            {products.map(p => (
+              <div key={p.id} className="col">
+                <div className="card h-100 shadow-sm product-card">
+                  <img className="card-img-top" src={p.image} alt="" />
+                  <div className="card-body text-center">
+                    <h5 className="card-title">{p.name}</h5>
+                    <Rating value={p.rating || 0} />
+                    <p className="card-text">{formatCurrency(p.price)}</p>
+                    <Link to={`/products/${p.id}`} className="btn btn-primary btn-sm">View</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      function PromoSection() {
+        return (
+          <div className="p-4 mb-4 bg-secondary text-white text-center rounded">
+            Limited time promotion! Get 10% off your first order.
+          </div>
+        );
+      }
+
+      const FooterComp = () => (
+        <footer className="text-white mt-5">&copy; 2025 The Sip</footer>
+      );
+
+      function ProductFilters({ filter, setFilter, categories, category, setCategory }) {
+        return (
+          <div className="mb-3">
+            <input className="form-control" placeholder="Search products" value={filter} onChange={e => setFilter(e.target.value)} />
+            <select className="form-select mt-2" value={category} onChange={e => setCategory(e.target.value)}>
+              <option value="">All categories</option>
+              {categories.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        );
+      }
+
+      function ProductGrid({ products }) {
+        return (
+          <div className="row row-cols-1 g-3">
+            {products.map(p => (
+              <div key={p.id} className="col">
+                <div className="card h-100 shadow-sm product-card">
+                  <img className="card-img-top" src={p.image} alt="" />
+                  <div className="card-body text-center">
+                    <h5 className="card-title">{p.name}</h5>
+                    <Rating value={p.rating || 0} />
+                    <p className="card-text">{formatCurrency(p.price)}</p>
+                    <Link to={`/products/${p.id}`} className="btn btn-primary btn-sm">Details</Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      function Pagination({ page, total, perPage, setPage }) {
+        const max = Math.ceil(total / perPage);
+        return (
+          <nav className="mt-3" aria-label="Product pages">
+            <ul className="pagination justify-content-center">
+              <li className="page-item">
+                <button className="page-link" onClick={() => setPage(page - 1)} disabled={page <= 1}>Prev</button>
+              </li>
+              <li className="page-item disabled"><span className="page-link">Page {page}</span></li>
+              <li className="page-item">
+                <button className="page-link" onClick={() => setPage(page + 1)} disabled={page >= max}>Next</button>
+              </li>
+            </ul>
+          </nav>
+        );
+      }
+
+      function ProductImages({ src }) {
+        return <img className="img-fluid mb-3" src={src} alt="" />;
+      }
+
+      function AddToCartButton({ onAdd }) {
+        return <button className="btn btn-success" onClick={onAdd}>Add to Cart</button>;
+      }
+
+      function ProductSpecs() {
+        return <p>Product specifications go here.</p>;
+      }
+
+      function RelatedProducts() {
+        return <p className="text-muted">Related products will appear here.</p>;
+      }
+
+      function CartItemsList({ cart }) {
+        return (
+          <ul className="list-group mb-3">
+            {cart.map((c, i) => (
+              <li key={i} className="list-group-item d-flex justify-content-between">
+                <span>{c.name}</span>
+                <span>{formatCurrency(c.price)}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      }
+
+      function DiscountCode() {
+        return (
+          <div className="mb-3">
+            <input className="form-control" placeholder="Discount code" />
+          </div>
+        );
+      }
+
+      function CheckoutCTA() {
+        const navigate = useNavigate();
+        return <button className="btn btn-primary" onClick={() => navigate('/checkout')}>Checkout</button>;
+      }
+
+      function ShippingInfo() {
+        return <input className="form-control mb-3" placeholder="Shipping address" />;
+      }
+
+      function PaymentForm() {
+        return <input className="form-control mb-3" placeholder="Payment details" />;
+      }
+
+      function OrderSummary({ cart }) {
+        const total = cart.reduce((s, c) => s + c.price, 0);
+        return <p>Total: {formatCurrency(total)}</p>;
+      }
+
+      function ChatMessage({ from, text }) {
+        return (
+          <div className="chat-message d-flex" role="status">
+            <i className={`fas ${from === 'bot' ? 'fa-robot text-secondary' : 'fa-user text-primary'} me-2`}></i>
+            <span>{text}</span>
+          </div>
+        );
+      }
+
+      function Chatbot() {
+        const [messages, setMessages] = React.useState([]);
+        const [message, setMessage] = React.useState('');
+        const [loading, setLoading] = React.useState(false);
 
         React.useEffect(() => {
-          fetch('/products')
+          fetch('/chat/history')
             .then(res => res.json())
-            .then(data => setProducts(data));
+            .then(hist => setMessages(hist || []));
         }, []);
 
-        const addProduct = () => {
-          fetch('/products', {
+        const sendMessage = () => {
+          if (!message.trim()) return;
+          const userMsg = { from: 'user', text: message.trim() };
+          setMessages(m => [...m, userMsg]);
+          setMessage('');
+          setLoading(true);
+          fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, price: parseFloat(price) })
+            body: JSON.stringify({ message: userMsg.text })
           })
             .then(res => res.json())
-            .then(product => setProducts([...products, product]));
+            .then(data => {
+              if (data && data.response) {
+                setMessages(m => [...m, { from: 'bot', text: data.response }]);
+              }
+            })
+            .finally(() => setLoading(false));
         };
 
         return (
-          <div>
-            <h1>Products</h1>
-            <ul>
-              {products.map(p => (
-                <li key={p.id}>{p.name} - ${p.price}</li>
+          <div className="chatbot mt-5" aria-label="Chatbot assistant">
+            <h3 className="h5 mb-3">Chatbot Assistant</h3>
+            <div className="mb-3" id="chatHistory">
+              {messages.map((m, i) => (
+                <ChatMessage key={i} from={m.from} text={m.text} />
               ))}
-            </ul>
-            <h2>Add Product</h2>
-            <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-            <input placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} />
-            <button onClick={addProduct}>Add</button>
+              {loading && (
+                <div className="chat-message d-flex text-muted">
+                  <i className="fas fa-robot me-2"></i>
+                  <span>...</span>
+                </div>
+              )}
+            </div>
+            <div className="input-group">
+              <input
+                className="form-control"
+                placeholder="Type a message"
+                aria-label="Message"
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={sendMessage}
+                disabled={!message.trim() || loading}
+                title="Send"
+              >
+                Send
+              </button>
+            </div>
           </div>
         );
-      };
+      }
+
+      const About = () => <div><h2>About</h2><p>About this shop.</p></div>;
+      const Contact = () => <div><h2>Contact</h2><p>Contact us at info@example.com.</p></div>;
+      const NotFound = () => <div><h2>Page Not Found</h2></div>;
+
+      function HomePage({ products }) {
+        return (
+          <div>
+            <HeroBanner />
+            <FeaturedProducts products={products.slice(0, 3)} />
+            <PromoSection />
+            <FooterComp />
+          </div>
+        );
+      }
+
+      function ProductsPage({ products, page, setPage, total, perPage, filter, setFilter, categories, category, setCategory }) {
+        const filtered = products.filter(p => {
+          const matchesName = p.name.toLowerCase().includes(filter.toLowerCase());
+          const matchesCat = !category || p.category === category;
+          return matchesName && matchesCat;
+        });
+        return (
+          <div>
+            <h2>Products</h2>
+            <ProductFilters filter={filter} setFilter={setFilter} categories={categories} category={category} setCategory={setCategory} />
+            <ProductGrid products={filtered} />
+            <Pagination page={page} setPage={setPage} total={total} perPage={perPage} />
+          </div>
+        );
+      }
+
+      function ProductDetails({ products, addToCart, addToFav }) {
+        const { id } = useParams();
+        const product = products.find(p => p.id === parseInt(id));
+        if (!product) return <NotFound />;
+        return (
+          <div>
+            <h2>{product.name}</h2>
+            <ProductImages src={product.image} />
+            <Rating value={product.rating || 0} />
+            <p>{formatCurrency(product.price)}</p>
+            <AddToCartButton onAdd={() => addToCart(product)} />
+            <button className="btn btn-outline-primary ms-2" onClick={() => addToFav(product)}>Wishlist</button>
+            <ProductSpecs />
+            <RelatedProducts />
+          </div>
+        );
+      }
+
+      function CartPage({ cart }) {
+        return (
+          <div>
+            <h2>Your Cart</h2>
+            <CartItemsList cart={cart} />
+            <DiscountCode />
+            <CheckoutCTA />
+          </div>
+        );
+      }
+
+      function WishlistPage({ favorites }) {
+        return (
+          <div>
+            <h2>Wishlist</h2>
+            <ProductGrid products={favorites} />
+          </div>
+        );
+      }
+
+      function OrdersPage({ orders }) {
+        return (
+          <div>
+            <h2>Order History</h2>
+            <ul className="list-group">
+              {orders.map(o => (
+                <li key={o.id} className="list-group-item d-flex justify-content-between">
+                  <span>{o.date}</span>
+                  <span>{formatCurrency(o.total)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+
+      function CheckoutPage({ cart }) {
+        return (
+          <div>
+            <h2>Checkout</h2>
+            <div className="progress mb-3">
+              <div className="progress-bar" style={{ width: '100%' }}>Step 3 of 3</div>
+            </div>
+            <ShippingInfo />
+            <PaymentForm />
+            <OrderSummary cart={cart} />
+          </div>
+        );
+      }
+
+      function App() {
+        const [products, setProducts] = React.useState([]);
+        const [loadingProducts, setLoadingProducts] = React.useState(true);
+        const [page, setPage] = React.useState(1);
+        const perPage = 5;
+        const [total, setTotal] = React.useState(0);
+        const [filter, setFilter] = React.useState('');
+        const [category, setCategory] = React.useState('');
+        const [categories, setCategories] = React.useState([]);
+        const [cart, setCart] = React.useState([]);
+        const [favorites, setFavorites] = React.useState([]);
+        const [orders, setOrders] = React.useState([
+          { id: 1, date: '2025-01-01', total: 99.99 }
+        ]);
+        const [currencyCode, setCurrencyCode] = React.useState('USD');
+        const formatCurrency = useCurrencyFormatter(currencyCode);
+
+        React.useEffect(() => {
+          fetch('/categories')
+            .then(res => res.json())
+            .then(data => setCategories(data));
+        }, []);
+
+        React.useEffect(() => {
+          setLoadingProducts(true);
+          const params = new URLSearchParams({ page, per_page: perPage });
+          if (filter) params.append('q', filter);
+          if (category) params.append('category', category);
+          fetch(`/products?${params.toString()}`)
+            .then(res => res.json())
+            .then(data => {
+              setProducts(data.items);
+              setTotal(data.total);
+            })
+            .finally(() => setLoadingProducts(false));
+        }, [page, filter, category]);
+
+        const addToCart = product => {
+          setCart([...cart, product]);
+          showToast('Added to cart');
+        };
+
+        const addToFav = product => {
+          if (!favorites.some(f => f.id === product.id)) {
+            setFavorites([...favorites, product]);
+            showToast('Added to wishlist');
+          }
+        };
+
+        const showToast = text => {
+          const toastEl = document.getElementById('toast');
+          if (toastEl) {
+            toastEl.querySelector('.toast-body').textContent = text;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+          }
+        };
+
+        return (
+          <BrowserRouter>
+            <header className="bg-primary text-white p-3 mb-4 sticky-top">
+              <div className="container d-flex justify-content-between align-items-center">
+                <h1 className="h3 mb-0"><i className="fas fa-store me-2"></i>The Sip</h1>
+                <nav>
+                  <Link to="/" className="text-white me-3">Home</Link>
+                  <Link to="/products" className="text-white me-3">Products</Link>
+                  <Link to="/wishlist" className="text-white me-3">Wishlist</Link>
+                  <Link to="/orders" className="text-white me-3">Orders</Link>
+                  <Link to="/cart" className="text-white me-3">Cart</Link>
+                  <Link to="/about" className="text-white me-3">About</Link>
+                  <Link to="/contact" className="text-white">Contact</Link>
+                </nav>
+                <form className="d-flex me-3" onSubmit={e => e.preventDefault()}>
+                  <input
+                    className="form-control form-control-sm me-2"
+                    type="search"
+                    placeholder="Search"
+                    value={filter}
+                    onChange={e => setFilter(e.target.value)}
+                  />
+                </form>
+                <select className="form-select form-select-sm w-auto me-2" value={currencyCode} onChange={e => setCurrencyCode(e.target.value)}>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                </select>
+                <button className="btn btn-light dark-mode-toggle" aria-label="Toggle dark mode"><i className="fas fa-moon"></i></button>
+              </div>
+            </header>
+            <div className="container">
+              {loadingProducts && <div className="text-center mb-3">Loading...</div>}
+              <Routes>
+                <Route path="/" element={<HomePage products={products} />} />
+                <Route path="/products" element={<ProductsPage products={products} page={page} setPage={setPage} total={total} perPage={perPage} filter={filter} setFilter={setFilter} categories={categories} category={category} setCategory={setCategory} />} />
+                <Route path="/products/:id" element={<ProductDetails products={products} addToCart={addToCart} addToFav={addToFav} />} />
+                <Route path="/cart" element={<CartPage cart={cart} />} />
+                <Route path="/wishlist" element={<WishlistPage favorites={favorites} />} />
+                <Route path="/orders" element={<OrdersPage orders={orders} />} />
+                <Route path="/checkout" element={<CheckoutPage cart={cart} />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Chatbot />
+              <div className="position-fixed bottom-0 end-0 p-3" style={{ zIndex: 11 }}>
+                <div id="toast" className="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                  <div className="toast-body"></div>
+                </div>
+              </div>
+            </div>
+          </BrowserRouter>
+        );
+      }
+
+      React.useEffect(() => {
+        document.addEventListener('DOMContentLoaded', () => {
+          const toggle = document.querySelector('.dark-mode-toggle');
+          if (toggle) toggle.addEventListener('click', () => document.body.classList.toggle('dark'));
+        });
+      }, []);
 
       ReactDOM.render(<App />, document.getElementById('root'));
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
