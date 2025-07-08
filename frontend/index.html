@@ -11,138 +11,123 @@
   <link rel="stylesheet" href="styles.css">
   <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
+
 <body>
-  <header class="bg-primary text-white p-3 mb-4">
+  <header class="bg-primary text-white p-3 mb-4 sticky-top">
     <div class="container d-flex justify-content-between align-items-center">
       <h1 class="h3 mb-0"><i class="fas fa-store me-2"></i>Ecommerce Demo</h1>
-      <button class="btn btn-light dark-mode-toggle"><i class="fas fa-moon"></i></button>
+      <nav>
+        <a href="/" class="text-white me-3">Home</a>
+        <a href="/products" class="text-white me-3">Products</a>
+        <a href="/cart" class="text-white me-3">Cart</a>
+        <a href="/about" class="text-white me-3">About</a>
+        <a href="/contact" class="text-white">Contact</a>
+      </nav>
+      <button class="btn btn-light dark-mode-toggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+      </button>
     </div>
   </header>
 
   <div id="root" class="container"></div>
 
-  <footer class="text-white">
+  <footer class="text-white text-center mt-5 mb-3">
     &copy; 2025 My Shop
   </footer>
 
   <script type="text/babel">
+    const { BrowserRouter, Routes, Route, Link, useNavigate, useParams } = ReactRouterDOM;
     const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
-    const App = () => {
-      const [products, setProducts] = React.useState([]);
-      const [name, setName] = React.useState('');
-      const [price, setPrice] = React.useState('');
+    // Example simple component for the chatbot
+    function Chatbot() {
       const [messages, setMessages] = React.useState([]);
-      const [userMessage, setUserMessage] = React.useState('');
+      const [message, setMessage] = React.useState('');
       const [loading, setLoading] = React.useState(false);
-      const [error, setError] = React.useState('');
-      const [success, setSuccess] = React.useState('');
 
       React.useEffect(() => {
-        fetch('/products')
+        fetch('/chat/history')
           .then(res => res.json())
-          .then(data => setProducts(data));
+          .then(hist => setMessages(hist || []));
       }, []);
 
-      const validProduct = () => name.trim() && !isNaN(parseFloat(price)) && parseFloat(price) >= 0;
-
-      const addProduct = () => {
-        if (!validProduct()) {
-          setError('Valid name and price required');
-          return;
-        }
-        setError('');
-        fetch('/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, price: parseFloat(price) })
-        })
-          .then(res => res.json())
-          .then(product => {
-            setProducts([...products, product]);
-            setName('');
-            setPrice('');
-            setSuccess('Product added!');
-            setTimeout(() => setSuccess(''), 2000);
-          });
-      };
-
       const sendMessage = () => {
-        if (!userMessage.trim()) return;
+        if (!message.trim()) return;
+        const userMsg = { from: 'user', text: message.trim() };
+        setMessages(prev => [...prev, userMsg]);
+        setMessage('');
         setLoading(true);
         fetch('/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMessage })
+          body: JSON.stringify({ message: userMsg.text })
         })
           .then(res => res.json())
           .then(data => {
-            setMessages([...messages, { user: userMessage, bot: data.response }]);
-            setUserMessage('');
+            if (data && data.response) {
+              setMessages(prev => [...prev, { from: 'bot', text: data.response }]);
+            }
           })
           .finally(() => setLoading(false));
       };
 
       return (
-        <div className="row g-4">
-          <div className="col-md-4">
-            <h2>Products</h2>
-            <div className="row row-cols-1 g-3">
-              {products.map(p => (
-                <div key={p.id} className="col">
-                  <div className="card h-100 shadow-sm">
-                    <img className="card-img-top" src="https://via.placeholder.com/150" alt="" />
-                    <div className="card-body">
-                      <h5 className="card-title text-center">{p.name}</h5>
-                      <p className="card-text text-center">{currency.format(p.price)}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="mt-5" aria-label="Chatbot assistant">
+          <h3>Chatbot Assistant</h3>
+          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            {messages.map((m, i) => (
+              <div key={i} className="mb-1">
+                <strong>{m.from === 'bot' ? 'Bot' : 'You'}:</strong> {m.text}
+              </div>
+            ))}
+            {loading && <div className="text-muted">Bot is typing...</div>}
           </div>
-
-          <div className="col-md-4">
-            <h2>Add Product</h2>
-            <div className="mb-3">
-              <label className="form-label" htmlFor="name">Name</label>
-              <input id="name" className="form-control" placeholder="Product name" value={name} onChange={e => setName(e.target.value)} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label" htmlFor="price">Price</label>
-              <input id="price" className="form-control" placeholder="0.00" value={price} onChange={e => setPrice(e.target.value)} />
-            </div>
-            {error && <div className="text-danger mb-2">{error}</div>}
-            {success && <div className="text-success mb-2">{success}</div>}
-            <button className="btn btn-primary" onClick={addProduct} disabled={!validProduct()}>
-              <i className="fas fa-plus me-1"></i>Add
+          <div className="input-group mt-2">
+            <input
+              className="form-control"
+              placeholder="Type a message"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+            />
+            <button className="btn btn-secondary" onClick={sendMessage} disabled={!message.trim() || loading}>
+              Send
             </button>
-          </div>
-
-          <div className="col-md-4">
-            <h2>Chatbot Assistant</h2>
-            <div className="mb-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {messages.map((m, i) => (
-                <div key={i} className="chat-message">
-                  <div><strong>You:</strong> {m.user}</div>
-                  <div><strong>Bot:</strong> {m.bot}</div>
-                </div>
-              ))}
-              {loading && <div className="loading">Bot is typing...</div>}
-            </div>
-            <div className="input-group">
-              <input className="form-control" placeholder="Type a message" value={userMessage} onChange={e => setUserMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }} />
-              <button className="btn btn-secondary" onClick={sendMessage} aria-label="Send">
-                <i className="fas fa-paper-plane"></i>
-              </button>
-            </div>
           </div>
         </div>
       );
-    };
+    }
 
+    // Example home page
+    function HomePage() {
+      return (
+        <div>
+          <h2>Welcome to our demo store</h2>
+          <p>Browse products, add your own, and chat with our assistant.</p>
+          <Chatbot />
+        </div>
+      );
+    }
+
+    function NotFound() {
+      return <h2>404 - Page Not Found</h2>;
+    }
+
+    function App() {
+      return (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      );
+    }
+
+    // Dark mode toggle
     React.useEffect(() => {
       document.querySelector('.dark-mode-toggle').addEventListener('click', () => {
         document.body.classList.toggle('dark');

@@ -10,6 +10,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
+  line-height: 1.5;
 }
 
 body.dark {
@@ -29,27 +30,76 @@ footer {
   color: #fff;
 }
 
+/* Product Cards */
 .card-img-top {
   width: 100%;
   height: 150px;
   object-fit: cover;
 }
 
+.product-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+/* Buttons & Forms */
+.btn {
+  transition: background-color 0.2s ease;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25);
+  border-color: var(--accent-color);
+}
+
+/* Chat Messages */
 .chat-message {
   margin-bottom: 0.75rem;
   animation: fadeIn 0.3s ease;
+  align-items: flex-start;
 }
 
+.chat-message i {
+  font-size: 1.5rem;
+}
+
+#chatHistory {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.chatbot {
+  max-width: 500px;
+}
+
+/* Hero Banner */
+.hero {
+  background-image: linear-gradient(to bottom right, var(--primary-color), var(--accent-color));
+  color: #fff;
+}
+
+/* Placeholders */
+.placeholder.card-img-top {
+  height: 150px;
+}
+
+/* Loading States */
+.loading {
+  font-style: italic;
+  color: var(--secondary-color);
+}
+
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Dark Mode Toggle */
 .dark-mode-toggle {
   cursor: pointer;
-}
-
-.loading {
-  font-style: italic;
-  color: var(--secondary-color);
 }
