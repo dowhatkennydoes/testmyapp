@@ -162,6 +162,81 @@
         return <p>Total: {currency.format(total)}</p>;
       }
 
+      function ChatMessage({ from, text }) {
+        return (
+          <div className="chat-message d-flex" role="status">
+            <i className={`fas ${from === 'bot' ? 'fa-robot text-secondary' : 'fa-user text-primary'} me-2`}></i>
+            <span>{text}</span>
+          </div>
+        );
+      }
+
+      function Chatbot() {
+        const [messages, setMessages] = React.useState([]);
+        const [message, setMessage] = React.useState('');
+        const [loading, setLoading] = React.useState(false);
+
+        React.useEffect(() => {
+          fetch('/chat/history')
+            .then(res => res.json())
+            .then(hist => setMessages(hist || []));
+        }, []);
+
+        const sendMessage = () => {
+          if (!message.trim()) return;
+          const userMsg = { from: 'user', text: message.trim() };
+          setMessages(m => [...m, userMsg]);
+          setMessage('');
+          setLoading(true);
+          fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg.text })
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.response) {
+                setMessages(m => [...m, { from: 'bot', text: data.response }]);
+              }
+            })
+            .finally(() => setLoading(false));
+        };
+
+        return (
+          <div className="chatbot mt-5" aria-label="Chatbot assistant">
+            <h3 className="h5 mb-3">Chatbot Assistant</h3>
+            <div className="mb-3" id="chatHistory">
+              {messages.map((m, i) => (
+                <ChatMessage key={i} from={m.from} text={m.text} />
+              ))}
+              {loading && (
+                <div className="chat-message d-flex text-muted">
+                  <i className="fas fa-robot me-2"></i>
+                  <span>...</span>
+                </div>
+              )}
+            </div>
+            <div className="input-group">
+              <input
+                className="form-control"
+                placeholder="Type a message"
+                aria-label="Message"
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                onClick={sendMessage}
+                disabled={!message.trim() || loading}
+                title="Send"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       const About = () => <div><h2>About</h2><p>About this shop.</p></div>;
       const Contact = () => <div><h2>Contact</h2><p>Contact us at info@example.com.</p></div>;
       const NotFound = () => <div><h2>Page Not Found</h2></div>;
@@ -276,6 +351,7 @@
                 <Route path="/contact" element={<Contact />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <Chatbot />
             </div>
           </BrowserRouter>
         );

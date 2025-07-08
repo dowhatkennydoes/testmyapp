@@ -14,10 +14,9 @@ See [backend/README.md](backend/README.md) for setup instructions.
 Open [frontend/index.html](frontend/index.html) in your browser after starting the backend. The page is styled with Bootstrap and a custom stylesheet that supports light and dark themes. A hero banner welcomes users and product cards fade in once data loads, with skeleton placeholders shown while content loads. Product listings are paginated using `page` and `per_page` query parameters.
 
 ## Chatbot Assistant
-The demo includes a minimal, reliable chatbot assistant served from the backend.  
-Messages are sent to the `/chat` API endpoint and recent conversations can be retrieved from `/chat/history`.  
-Keywords like "hello" or "price" trigger friendly replies, and missing messages return errors for predictability.
-The interface includes ARIA attributes for accessibility and tooltips on action buttons.
+The demo includes a minimal, reliable chatbot assistant served from the backend and displayed at the bottom of every page.
+Messages are sent to the `/chat` API endpoint and recent conversations can be retrieved from `/chat/history`.
+Keywords like "hello" or "price" trigger friendly replies, and missing messages return errors for predictability. The chat interface disables the Send button until text is entered, shows a loading indicator while awaiting replies and includes ARIA labels for accessibility.
 
 ## Storefront Pages
 The React frontend now uses React Router to provide a multi-page storefront:

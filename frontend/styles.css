@@ -86,3 +86,12 @@ footer {
 .chat-message i {
   font-size: 1.5rem;
 }
+
+.chatbot {
+  max-width: 500px;
+}
+
+#chatHistory {
+  max-height: 200px;
+  overflow-y: auto;
+}
