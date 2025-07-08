@@ -7,6 +7,24 @@ products = [
     {"id": 1, "name": "Sample Product", "price": 10.0}
 ]
 
+# Simple chatbot assistant with simple rules
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json(force=True, silent=True) or {}
+    message = data.get('message')
+    if not message:
+        return jsonify({"error": "message required"}), 400
+
+    text = message.lower()
+    if "hello" in text:
+        bot = "Hello! How can I assist you today?"
+    elif "price" in text:
+        bot = "Our products start at $10."
+    else:
+        bot = f"You said: {message}"
+
+    return jsonify({"response": bot})
+
 @app.route('/products', methods=['GET'])
 def list_products():
     return jsonify(products)

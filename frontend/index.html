@@ -16,6 +16,8 @@
         const [products, setProducts] = React.useState([]);
         const [name, setName] = React.useState('');
         const [price, setPrice] = React.useState('');
+        const [messages, setMessages] = React.useState([]);
+        const [userMessage, setUserMessage] = React.useState('');
 
         React.useEffect(() => {
           fetch('/products')
@@ -33,6 +35,19 @@
             .then(product => setProducts([...products, product]));
         };
 
+        const sendMessage = () => {
+          fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMessage })
+          })
+            .then(res => res.json())
+            .then(data => {
+              setMessages([...messages, { user: userMessage, bot: data.response }]);
+              setUserMessage('');
+            });
+        };
+
         return (
           <div>
             <h1>Products</h1>
@@ -45,6 +60,18 @@
             <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
             <input placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} />
             <button onClick={addProduct}>Add</button>
+
+            <h2>Chatbot Assistant</h2>
+            <ul>
+              {messages.map((m, i) => (
+                <li key={i}>
+                  <strong>You:</strong> {m.user}<br/>
+                  <strong>Bot:</strong> {m.bot}
+                </li>
+              ))}
+            </ul>
+            <input placeholder="Message" value={userMessage} onChange={e => setUserMessage(e.target.value)} />
+            <button onClick={sendMessage}>Send</button>
           </div>
         );
       };
