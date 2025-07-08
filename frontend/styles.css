@@ -1,0 +1,55 @@
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --accent-color: #17a2b8;
+  --bg-color: #ffffff;
+  --text-color: #212529;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+body.dark {
+  --bg-color: #212529;
+  --text-color: #f8f9fa;
+}
+
+header {
+  margin-bottom: 2rem;
+}
+
+footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+
+.card-img-top {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.chat-message {
+  margin-bottom: 0.75rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dark-mode-toggle {
+  cursor: pointer;
+}
+
+.loading {
+  font-style: italic;
+  color: var(--secondary-color);
+}

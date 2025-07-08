@@ -31,11 +31,22 @@ def list_products():
 
 @app.route('/products', methods=['POST'])
 def create_product():
-    data = request.get_json(force=True)
+    data = request.get_json(force=True) or {}
+    name = data.get("name", "").strip()
+    price = data.get("price")
+
+    if not name:
+        return jsonify({"error": "name required"}), 400
+
+    try:
+        price_val = float(price)
+    except (TypeError, ValueError):
+        return jsonify({"error": "valid price required"}), 400
+
     product = {
         "id": len(products) + 1,
-        "name": data.get("name"),
-        "price": data.get("price", 0.0)
+        "name": name,
+        "price": price_val
     }
     products.append(product)
     return jsonify(product), 201
