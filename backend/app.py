@@ -2,10 +2,8 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# store conversation history in memory
+# In-memory data storage
 chat_history = []
-
-# Sample in-memory data store
 products = [
     {
         "id": 1,
@@ -33,11 +31,14 @@ products = [
     }
 ]
 
-# Simple chatbot assistant with basic keyword responses
+# ----------- Chatbot Endpoints -----------
+
 @app.route('/chat', methods=['POST'])
 def chat():
+    """Respond to user messages with keyword-based replies."""
     data = request.get_json(force=True, silent=True) or {}
     message = data.get('message')
+
     if not message:
         return jsonify({"error": "message required"}), 400
 
@@ -57,24 +58,25 @@ def chat():
 
     return jsonify({"response": bot})
 
-
 @app.route('/chat/history', methods=['GET'])
 def chat_history_endpoint():
-    """Return recent chat history."""
+    """Return the recent chat conversation history."""
     return jsonify(chat_history)
+
+# ----------- Product Endpoints -----------
 
 @app.route('/categories', methods=['GET'])
 def list_categories():
-    """Return unique product categories."""
-    cats = sorted({p.get('category', 'Uncategorized') for p in products})
-    return jsonify(cats)
+    """Return a list of unique product categories."""
+    categories = sorted({p.get('category', 'Uncategorized') for p in products})
+    return jsonify(categories)
 
 @app.route('/products', methods=['GET'])
 def list_products():
-    """Return a paginated list of products with optional search and category filter."""
+    """Return a paginated list of products with optional search and category filtering."""
     try:
-        page = int(request.args.get('page', '1'))
-        per_page = int(request.args.get('per_page', '5'))
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 5))
     except ValueError:
         return jsonify({"error": "invalid pagination"}), 400
 
@@ -93,6 +95,7 @@ def list_products():
     start = (page - 1) * per_page
     end = start + per_page
     items = filtered[start:end]
+
     return jsonify({
         "items": items,
         "page": page,
@@ -102,6 +105,7 @@ def list_products():
 
 @app.route('/products', methods=['POST'])
 def create_product():
+    """Create a new product."""
     data = request.get_json(force=True) or {}
     name = data.get("name", "").strip()
     price = data.get("price")
@@ -131,7 +135,10 @@ def create_product():
         "rating": rating_val
     }
     products.append(product)
+
     return jsonify(product), 201
+
+# ----------- Run App -----------
 
 if __name__ == '__main__':
     app.run(debug=True)
