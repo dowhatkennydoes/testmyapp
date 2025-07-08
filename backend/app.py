@@ -42,7 +42,25 @@ def chat_history_endpoint():
 
 @app.route('/products', methods=['GET'])
 def list_products():
-    return jsonify(products)
+    """Return a paginated list of products."""
+    try:
+        page = int(request.args.get('page', '1'))
+        per_page = int(request.args.get('per_page', '5'))
+    except ValueError:
+        return jsonify({"error": "invalid pagination"}), 400
+
+    if page < 1 or per_page < 1:
+        return jsonify({"error": "invalid pagination"}), 400
+
+    start = (page - 1) * per_page
+    end = start + per_page
+    items = products[start:end]
+    return jsonify({
+        "items": items,
+        "page": page,
+        "per_page": per_page,
+        "total": len(products)
+    })
 
 @app.route('/products', methods=['POST'])
 def create_product():

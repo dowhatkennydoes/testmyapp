@@ -38,6 +38,9 @@
       const App = () => {
         const [products, setProducts] = React.useState([]);
         const [loadingProducts, setLoadingProducts] = React.useState(true);
+        const [page, setPage] = React.useState(1);
+        const perPage = 5;
+        const [total, setTotal] = React.useState(0);
         const [name, setName] = React.useState('');
         const [price, setPrice] = React.useState('');
         const [messages, setMessages] = React.useState([]);
@@ -47,11 +50,17 @@
         const [success, setSuccess] = React.useState('');
 
         React.useEffect(() => {
-          fetch('/products')
+          setLoadingProducts(true);
+          fetch(`/products?page=${page}&per_page=${perPage}`)
             .then(res => res.json())
-            .then(data => setProducts(data))
+            .then(data => {
+              setProducts(data.items);
+              setTotal(data.total);
+            })
             .finally(() => setLoadingProducts(false));
+        }, [page]);
 
+        React.useEffect(() => {
           fetch('/chat/history')
             .then(res => res.json())
             .then(hist => setMessages(hist));
@@ -71,8 +80,14 @@
             body: JSON.stringify({ name, price: parseFloat(price) })
           })
             .then(res => res.json())
-            .then(product => {
-              setProducts([...products, product]);
+            .then(() => {
+              // refresh current page after adding
+              fetch(`/products?page=${page}&per_page=${perPage}`)
+                .then(res => res.json())
+                .then(data => {
+                  setProducts(data.items);
+                  setTotal(data.total);
+                });
               setName('');
               setPrice('');
               setSuccess('Product added!');
@@ -121,6 +136,17 @@
                   </div>
                 ))}
               </div>
+              <nav className="mt-3" aria-label="Product pages">
+                <ul className="pagination justify-content-center">
+                  <li className="page-item">
+                    <button className="page-link" onClick={() => setPage(page - 1)} disabled={page <= 1}>Prev</button>
+                  </li>
+                  <li className="page-item disabled"><span className="page-link">Page {page}</span></li>
+                  <li className="page-item">
+                    <button className="page-link" onClick={() => setPage(page + 1)} disabled={page >= Math.ceil(total / perPage)}>Next</button>
+                  </li>
+                </ul>
+              </nav>
             </div>
             <div className="col-md-4">
               <h2>Add Product</h2>

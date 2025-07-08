@@ -11,7 +11,7 @@ See [backend/README.md](backend/README.md) for setup instructions.
 
 ## Frontend
 
-Open [frontend/index.html](frontend/index.html) in your browser after starting the backend. The page is styled with Bootstrap and a custom stylesheet that supports light and dark themes. A hero banner welcomes users and product cards fade in once data loads, with skeleton placeholders shown while content loads.
+Open [frontend/index.html](frontend/index.html) in your browser after starting the backend. The page is styled with Bootstrap and a custom stylesheet that supports light and dark themes. A hero banner welcomes users and product cards fade in once data loads, with skeleton placeholders shown while content loads. Product listings are paginated using `page` and `per_page` query parameters.
 
 ## Chatbot Assistant
 The demo includes a minimal, reliable chatbot assistant served from the backend.  
