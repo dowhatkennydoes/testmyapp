@@ -14,6 +14,7 @@ The API now supports searching products with a `q` parameter and filtering by `c
 ## Frontend
 
 Open [frontend/index.html](frontend/index.html) in your browser after starting the backend. The page is styled with Bootstrap and a custom stylesheet that supports light and dark themes. A hero banner welcomes users and product cards fade in once data loads, with skeleton placeholders shown while content loads. Product listings are paginated using `page` and `per_page` query parameters.
+The React app code now resides in [frontend/app.js](frontend/app.js) to keep the HTML small.
 
 ## Chatbot Assistant
 The demo includes a minimal, reliable chatbot assistant served from the backend and displayed at the bottom of every page.
