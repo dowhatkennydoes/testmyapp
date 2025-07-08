@@ -1,32 +1,42 @@
-# Backend - Flask API
+Backend – Flask API
+This is a minimal Flask API powering the CMS ecommerce app.
+It serves product data, handles basic chatbot interactions, and supports pagination and error handling.
 
-This is a minimal Flask API serving product data for the CMS ecommerce app.
+🔌 API Endpoints
+Endpoint	Description
+POST /chat	Accepts a user message and returns a chatbot reply
+GET /chat/history	Returns the recent chat conversation history
+GET /products	Returns a paginated list of products (page, per_page)
 
-The API exposes a `/chat` endpoint used by the frontend chatbot, a `/chat/history` endpoint to fetch recent conversations, and a `/products` endpoint for product management. Missing names or invalid prices return errors, while the chat endpoint responds with simple rules for demonstration. The products endpoint also accepts `page` and `per_page` query parameters for pagination.
+The /chat endpoint responds to simple keywords like "hello" and "price" with friendly replies.
 
-## Setup
+Invalid requests (e.g., missing message content, bad pricing data) return meaningful error messages.
 
-```
+🚀 Setup
+Run these commands from the backend/ directory:
+
+bash
+Copy
+Edit
 python3 -m venv venv
 source venv/bin/activate
 pip install Flask
-python backend/app.py
-```
-
-
-Example chat request:
-```bash
+python app.py
+🛠️ Example API Requests
+Send a message to the chatbot:
+bash
+Copy
+Edit
 curl -X POST http://localhost:5000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "hello"}'
-```
-
 Get chat history:
-```bash
+bash
+Copy
+Edit
 curl http://localhost:5000/chat/history
-```
-
-Paginated products:
-```bash
+Get paginated product list:
+bash
+Copy
+Edit
 curl "http://localhost:5000/products?page=1&per_page=5"
-```
