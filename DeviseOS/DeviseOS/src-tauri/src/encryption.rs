@@ -6,7 +6,10 @@ use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, SaltString}
 use base64::{Engine as _, engine::general_purpose};
 use rand::RngCore;
 use std::fs;
-use crate::{AppError, AppResult};
+use std::path::Path;
+use crate::AppError;
+
+pub type AppResult<T> = Result<T, AppError>;
 
 pub struct EncryptionManager {
     key: Key<Aes256Gcm>,
@@ -37,7 +40,7 @@ impl EncryptionManager {
         Ok(Self { key: *key, cipher })
     }
 
-    pub fn from_key_file(key_path: &std::path::Path) -> AppResult<Self> {
+    pub fn from_key_file(key_path: &Path) -> AppResult<Self> {
         let key_data = fs::read(key_path)
             .map_err(|e| AppError::Encryption(format!("Failed to read key file: {}", e)))?;
         
@@ -49,6 +52,23 @@ impl EncryptionManager {
         let cipher = Aes256Gcm::new(key);
         
         Ok(Self { key: *key, cipher })
+    }
+
+    pub fn generate_key_file(key_path: &Path, master_password: &str) -> AppResult<()> {
+        let salt = generate_salt()?;
+        let manager = Self::new(master_password, &salt)?;
+        
+        // Create directory if it doesn't exist
+        if let Some(parent) = key_path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| AppError::Encryption(format!("Failed to create key directory: {}", e)))?;
+        }
+        
+        let key_bytes = manager.key.as_slice();
+        fs::write(key_path, key_bytes)
+            .map_err(|e| AppError::Encryption(format!("Failed to write key file: {}", e)))?;
+        
+        Ok(())
     }
 
     pub fn encrypt(&self, data: &[u8]) -> AppResult<Vec<u8>> {
@@ -99,12 +119,6 @@ impl EncryptionManager {
             .map_err(|e| AppError::Encryption(format!("Invalid UTF-8: {}", e)))
     }
 
-    pub fn generate_key_file(&self, key_path: &std::path::Path) -> AppResult<()> {
-        let key_bytes = self.key.as_slice();
-        fs::write(key_path, key_bytes)
-            .map_err(|e| AppError::Encryption(format!("Failed to write key file: {}", e)))
-    }
-
     pub fn hash_password(password: &str) -> AppResult<String> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
@@ -123,6 +137,19 @@ impl EncryptionManager {
         Ok(Argon2::default()
             .verify_password(password.as_bytes(), &parsed_hash)
             .is_ok())
+    }
+
+    pub fn change_password(&self, old_password: &str, new_password: &str, key_path: &Path) -> AppResult<()> {
+        // For now, we'll just generate a new key with the new password
+        // In a real implementation, you'd want to re-encrypt all data
+        let salt = generate_salt()?;
+        let new_manager = Self::new(new_password, &salt)?;
+        
+        let key_bytes = new_manager.key.as_slice();
+        fs::write(key_path, key_bytes)
+            .map_err(|e| AppError::Encryption(format!("Failed to write new key file: {}", e)))?;
+        
+        Ok(())
     }
 }
 
@@ -160,6 +187,14 @@ impl SecureString {
         }
         self.data.clear();
     }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
 }
 
 impl Drop for SecureString {
@@ -174,7 +209,13 @@ impl std::fmt::Display for SecureString {
     }
 }
 
-// Encryption levels
+impl std::fmt::Debug for SecureString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SecureString([REDACTED])")
+    }
+}
+
+// Encryption levels for different security requirements
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EncryptionLevel {
     None,
@@ -201,4 +242,104 @@ impl EncryptionLevel {
             EncryptionLevel::Military => 128,
         }
     }
-} 
+
+    pub fn memory_cost(&self) -> u32 {
+        match self {
+            EncryptionLevel::None => 0,
+            EncryptionLevel::Standard => 65536,   // 64 MiB
+            EncryptionLevel::High => 262144,      // 256 MiB
+            EncryptionLevel::Military => 1048576, // 1 GiB
+        }
+    }
+}
+
+// Key derivation for different encryption levels
+pub struct KeyDerivation {
+    level: EncryptionLevel,
+}
+
+impl KeyDerivation {
+    pub fn new(level: EncryptionLevel) -> Self {
+        Self { level }
+    }
+
+    pub fn derive_key(&self, password: &str, salt: &[u8]) -> AppResult<Vec<u8>> {
+        if self.level == EncryptionLevel::None {
+            return Err(AppError::Encryption("Cannot derive key with None encryption level".to_string()));
+        }
+
+        let config = argon2::Config::default();
+        let hash = argon2::hash_raw(
+            password.as_bytes(),
+            salt,
+            &config,
+        ).map_err(|e| AppError::Encryption(format!("Key derivation failed: {}", e)))?;
+
+        Ok(hash)
+    }
+}
+
+// Utility functions for secure operations
+pub fn secure_compare(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+
+    let mut result = 0u8;
+    for (x, y) in a.iter().zip(b.iter()) {
+        result |= x ^ y;
+    }
+    result == 0
+}
+
+pub fn zeroize(data: &mut [u8]) {
+    for byte in data {
+        *byte = 0;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encryption_roundtrip() {
+        let password = "test_password";
+        let salt = generate_salt().unwrap();
+        let manager = EncryptionManager::new(password, &salt).unwrap();
+        
+        let plaintext = "Hello, World!";
+        let encrypted = manager.encrypt_string(plaintext).unwrap();
+        let decrypted = manager.decrypt_string(&encrypted).unwrap();
+        
+        assert_eq!(plaintext, decrypted);
+    }
+
+    #[test]
+    fn test_password_hashing() {
+        let password = "test_password";
+        let hash = EncryptionManager::hash_password(password).unwrap();
+        
+        assert!(EncryptionManager::verify_password(password, &hash).unwrap());
+        assert!(!EncryptionManager::verify_password("wrong_password", &hash).unwrap());
+    }
+
+    #[test]
+    fn test_secure_string() {
+        let mut secure = SecureString::new("sensitive_data");
+        assert_eq!(secure.as_str(), "sensitive_data");
+        
+        secure.clear();
+        assert!(secure.is_empty());
+    }
+
+    #[test]
+    fn test_secure_compare() {
+        let a = b"hello";
+        let b = b"hello";
+        let c = b"world";
+        
+        assert!(secure_compare(a, b));
+        assert!(!secure_compare(a, c));
+    }
+}

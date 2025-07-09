@@ -1,67 +1,49 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import NoteEditor from './pages/NoteEditor'
-import Settings from './pages/Settings'
-import { NotesProvider } from './contexts/NotesContext'
-import { ThemeProvider } from './contexts/ThemeContext'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { NotesProvider } from './contexts/NotesContext';
+import { NotebookProvider } from './contexts/NotebookContext';
+import { TabProvider } from './contexts/TabContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { NotebookLayout } from './components/NotebookLayout';
+import { Dashboard } from './pages/Dashboard';
+import { NoteEditor } from './pages/NoteEditor';
+import { Settings } from './pages/Settings';
+import { Search } from './pages/Search';
 
 function App() {
   return (
     <ThemeProvider>
       <NotesProvider>
-        <div className="min-h-screen bg-background text-foreground">
-          <Layout>
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route 
-                  path="/" 
-                  element={
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Dashboard />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/note/:id" 
-                  element={
-                    <motion.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <NoteEditor />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/settings" 
-                  element={
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Settings />
-                    </motion.div>
-                  } 
-                />
-              </Routes>
-            </AnimatePresence>
-          </Layout>
-        </div>
+        <NotebookProvider>
+          <TabProvider>
+            <div className="min-h-screen bg-background text-foreground">
+              <NotebookLayout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/note/:id" element={<NoteEditor />} />
+                  <Route path="/page/:id" element={<NoteEditor />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Routes>
+              </NotebookLayout>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: 'hsl(var(--card))',
+                    color: 'hsl(var(--foreground))',
+                    border: '1px solid hsl(var(--border))',
+                  },
+                }}
+              />
+            </div>
+          </TabProvider>
+        </NotebookProvider>
       </NotesProvider>
     </ThemeProvider>
-  )
+  );
 }
 
-export default App 
+export default App;

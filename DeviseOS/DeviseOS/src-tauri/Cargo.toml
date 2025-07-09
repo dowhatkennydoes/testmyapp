@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["shell-open"] }
+tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -40,7 +40,9 @@ walkdir = "2.4"
 
 # AI and ML processing
 whisper-rs = "0.12"
-rust-bert = "0.21"
+candle-core = "0.7"
+candle-nn = "0.7"
+candle-transformers = "0.7"
 tokenizers = "0.19"
 
 # Utilities
@@ -57,9 +59,6 @@ futures = "0.3"
 
 # Compression
 flate2 = "1.0"
-
-# HTTP client for optional cloud sync
-reqwest = { version = "0.12", features = ["json", "stream"] }
 
 # System directories
 dirs = "5.0"

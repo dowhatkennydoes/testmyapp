@@ -1,21 +1,22 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "deviseos",
+  "productName": "DeviseOS",
   "version": "0.1.0",
   "identifier": "com.deviseos.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
-    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "deviseos",
-        "width": 800,
-        "height": 600
+        "title": "DeviseOS",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600
       }
     ],
     "security": {
