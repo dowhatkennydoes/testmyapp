@@ -1,0 +1,68 @@
+[package]
+name = "deviseos"
+version = "0.1.0"
+description = "A privacy-first, AI-powered desktop platform with local processing capabilities"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "deviseos_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["shell-open"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Database and storage
+rusqlite = { version = "0.31", features = ["bundled"] }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
+
+# Encryption and security
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+base64 = "0.21"
+
+# File handling and I/O
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
+walkdir = "2.4"
+
+# AI and ML processing
+whisper-rs = "0.12"
+rust-bert = "0.21"
+tokenizers = "0.19"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.7", features = ["v4", "serde"] }
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Async runtime
+async-trait = "0.1"
+futures = "0.3"
+
+# Compression
+flate2 = "1.0"
+
+# HTTP client for optional cloud sync
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+# System directories
+dirs = "5.0"
+num_cpus = "1.0"
+hostname = "0.3"
+
